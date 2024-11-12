@@ -28,6 +28,9 @@
     <input type="range" id="tauRange" min="0.1" max="10" step="0.1" value="2" oninput="updateGraph()">
     <span id="tauValue">2</span> 秒
 
+    <!-- 顯示方程式 -->
+    <div id="equationDisplay" style="margin-top: 20px; font-size: 18px;"></div>
+
     <!-- 顯示曲線圖 -->
     <canvas id="transientChart"></canvas>
 
@@ -74,18 +77,43 @@
             const data = labels.map(t => {
                 if (componentType === 'capacitor') {
                     return displayType === 'voltage'
-                        ? 20 * (1 - Math.exp(-t / tau)) // 電容充電電壓
-                        : (20 / tau) * Math.exp(-t / tau); // 電容充電電流
+                        ? E * (1 - Math.exp(-t / tau)) // 電容充電電壓
+                        : (E / R) * Math.exp(-t / tau); // 電容充電電流
                 } else {
                     return displayType === 'voltage'
-                        ? 20 * Math.exp(-t / tau) // 電感放電電壓
-                        : (20 / tau) * (1 - Math.exp(-t / tau)); // 電感放電電流
+                        ? E * Math.exp(-t / tau) // 電感放電電壓
+                        : (E / R) * (1 - Math.exp(-t / tau)); // 電感放電電流
                 }
             });
 
             transientChart.data.datasets[0].data = data;
             transientChart.update();
+
+            // 更新方程式顯示
+            updateEquationDisplay(componentType, displayType, tau);
         }
+
+        function updateEquationDisplay(componentType, displayType, tau) {
+            let equation = '';
+            if (componentType === 'capacitor') {
+                if (displayType === 'voltage') {
+                    equation = `V(t) = E (1 - e<sup>-t / ${tau}</sup>)`;
+                } else {
+                    equation = `I(t) = (E / R) e<sup>-t / ${tau}</sup>`;
+                }
+            } else {
+                if (displayType === 'voltage') {
+                    equation = `V(t) = E e<sup>-t / ${tau}</sup>`;
+                } else {
+                    equation = `I(t) = (E / R) (1 - e<sup>-t / ${tau}</sup>)`;
+                }
+            }
+            document.getElementById('equationDisplay').innerHTML = `當前方程式: ${equation}`;
+        }
+
+        // 初始化常數 E 和 R 值
+        const E = 1; // 可以設定為 1，或改為使用者輸入
+        const R = 1; // 可以設定為 1，或改為使用者輸入
 
         updateGraph();
     </script>
