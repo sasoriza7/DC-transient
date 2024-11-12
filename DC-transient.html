@@ -39,7 +39,7 @@
         const transientChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: Array.from({length: 50}, (_, i) => i * 0.1), // 0 到 5 秒的時間軸
+                labels: [], // 時間軸標籤動態生成
                 datasets: [{
                     label: '暫態響應',
                     borderColor: 'blue',
@@ -55,7 +55,9 @@
                         title: {
                             display: true,
                             text: '時間 (秒)'
-                        }
+                        },
+                        min: 0,
+                        max: 5 // 初始化為 5，將根據 tau 更新
                     },
                     y: {
                         title: {
@@ -73,7 +75,12 @@
             const tau = parseFloat(document.getElementById('tauRange').value);
             document.getElementById('tauValue').textContent = tau;
 
-            const labels = Array.from({length: 50}, (_, i) => i * 0.1);
+            // 根據 tau 調整時間軸範圍
+            const maxTime = 5 * tau;
+            transientChart.options.scales.x.max = maxTime;
+
+            // 更新時間軸標籤及數據
+            const labels = Array.from({ length: 50 }, (_, i) => i * (maxTime / 50)); // 分50個點顯示
             const data = labels.map(t => {
                 if (componentType === 'capacitor') {
                     return displayType === 'voltage'
@@ -86,6 +93,7 @@
                 }
             });
 
+            transientChart.data.labels = labels;
             transientChart.data.datasets[0].data = data;
             transientChart.update();
 
