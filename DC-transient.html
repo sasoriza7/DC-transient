@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>直流暫態特性曲線</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>直流暫態特性曲線</h1>
+
+    <!-- 選擇電容或電感 -->
+    <label for="componentSelect">選擇元件：</label>
+    <select id="componentSelect" onchange="updateGraph()">
+        <option value="capacitor">電容</option>
+        <option value="inductor">電感</option>
+    </select>
+
+    <!-- 選擇顯示電壓或電流 -->
+    <label for="displaySelect">顯示：</label>
+    <select id="displaySelect" onchange="updateGraph()">
+        <option value="voltage">電壓</option>
+        <option value="current">電流</option>
+    </select>
+
+    <!-- 時間常數調整拉桿 -->
+    <label for="tauRange">時間常數 (τ)：</label>
+    <input type="range" id="tauRange" min="0.1" max="10" step="0.1" value="2" oninput="updateGraph()">
+    <span id="tauValue">2</span> 秒
+
+    <!-- 顯示曲線圖 -->
+    <canvas id="transientChart"></canvas>
+
+    <script>
+        const ctx = document.getElementById('transientChart').getContext('2d');
+        const transientChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: 50}, (_, i) => i * 0.1), // 0 到 5 秒的時間軸
+                datasets: [{
+                    label: '暫態響應',
+                    borderColor: 'blue',
+                    fill: false,
+                    data: []
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        type: 'linear',
+                        title: {
+                            display: true,
+                            text: '時間 (秒)'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: '電壓 / 電流'
+                        }
+                    }
+                }
+            }
+        });
+
+        function updateGraph() {
+            const componentType = document.getElementById('componentSelect').value;
+            const displayType = document.getElementById('displaySelect').value;
+            const tau = parseFloat(document.getElementById('tauRange').value);
+            document.getElementById('tauValue').textContent = tau;
+
+            const labels = Array.from({length: 50}, (_, i) => i * 0.1);
+            const data = labels.map(t => {
+                if (componentType === 'capacitor') {
+                    return displayType === 'voltage'
+                        ? 20 * (1 - Math.exp(-t / tau)) // 電容充電電壓
+                        : (20 / tau) * Math.exp(-t / tau); // 電容充電電流
+                } else {
+                    return displayType === 'voltage'
+                        ? 20 * Math.exp(-t / tau) // 電感放電電壓
+                        : (20 / tau) * (1 - Math.exp(-t / tau)); // 電感放電電流
+                }
+            });
+
+            transientChart.data.datasets[0].data = data;
+            transientChart.update();
+        }
+
+        updateGraph();
+    </script>
+</body>
+</html>
