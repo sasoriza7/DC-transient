@@ -5,41 +5,155 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>直流暫態特性曲線</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        #quiz {
+            display: none;
+            margin-top: 20px;
+        }
+        .question {
+            margin-bottom: 15px;
+        }
+        .question button {
+            margin-right: 10px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <h1>直流暫態特性曲線</h1>
 
-    <!-- 選擇電容或電感 -->
-    <label for="componentSelect">選擇元件：</label>
-    <select id="componentSelect" onchange="updateGraph()">
-        <option value="capacitor">電容</option>
-        <option value="inductor">電感</option>
-    </select>
+    <!-- 曲線模擬區 -->
+    <div id="curveSimulation">
+        <h2>曲線模擬區</h2>
 
-    <!-- 選擇顯示電壓或電流 -->
-    <label for="displaySelect">顯示：</label>
-    <select id="displaySelect" onchange="updateGraph()">
-        <option value="voltage">電壓</option>
-        <option value="current">電流</option>
-    </select>
+        <!-- 特性曲線公式顯示 -->
+        <div id="formulaDisplay" style="margin-bottom: 15px; font-size: 18px;"></div>
+        
+        <!-- 控制區域 -->
+        <label for="chargeStateSelect">選擇狀態：</label>
+        <select id="chargeStateSelect" onchange="updateGraph()">
+            <option value="charge">充電</option>
+            <option value="discharge">放電</option>
+        </select>
 
-    <!-- 時間常數調整拉桿 -->
-    <label for="tauRange">時間常數 (τ)：</label>
-    <input type="range" id="tauRange" min="0.1" max="10" step="0.1" value="2" oninput="updateGraph()">
-    <span id="tauValue">2</span> 秒
+        <label for="componentSelect">選擇元件：</label>
+        <select id="componentSelect" onchange="updateGraph()">
+            <option value="capacitor">電容</option>
+            <option value="inductor">電感</option>
+        </select>
 
-    <!-- 顯示方程式 -->
-    <div id="equationDisplay" style="margin-top: 20px; font-size: 18px;"></div>
+        <label for="displaySelect">顯示：</label>
+        <select id="displaySelect" onchange="updateGraph()">
+            <option value="voltage">電壓</option>
+            <option value="current">電流</option>
+        </select>
 
-    <!-- 顯示曲線圖 -->
-    <canvas id="transientChart"></canvas>
+        <label for="tauRange">時間常數 (τ)：</label>
+        <input type="range" id="tauRange" min="0.1" max="10" step="0.1" value="2" oninput="updateGraph()">
+        <span id="tauValue">2</span> 秒
+
+        <!-- 曲線圖 -->
+        <canvas id="transientChart"></canvas>
+    </div>
+
+    <!-- 理論測驗區 -->
+    <div id="theoryTest">
+        <h2>理論測驗區</h2>
+        <button onclick="startQuiz()">開始測驗</button>
+        <button onclick="showTables()" id="showTablesButton" class="hidden">顯示表格</button>
+
+        <!-- 學術說明表格 -->
+        <div id="academicTables">
+            <table>
+                <caption>上升 / 下降 曲線的方程式</caption>
+                <tr>
+                    <th>狀態</th>
+                    <th>方程式</th>
+                </tr>
+                <tr>
+                    <td>上升曲線</td>
+                    <td>\( V(t) = E (1 - e^{-t / \tau}) \) 或 \( I(t) = \frac{E}{R} (1 - e^{-t / \tau}) \)</td>
+                </tr>
+                <tr>
+                    <td>下降曲線</td>
+                    <td>\( V(t) = E e^{-t / \tau} \) 或 \( I(t) = \frac{E}{R} e^{-t / \tau} \)</td>
+                </tr>
+            </table>
+
+            <table>
+                <caption>時間常數的意義與公式</caption>
+                <tr>
+                    <th>項目</th>
+                    <th>內容</th>
+                </tr>
+                <tr>
+                    <td>時間常數公式</td>
+                    <td>\( \tau = RC \)（電容）或 \( \tau = \frac{L}{R} \)（電感）</td>
+                </tr>
+                <tr>
+                    <td>時間常數的意義</td>
+                    <td>時間常數代表系統在特定時間內響應變化的速率。約在 5 個時間常數後，系統接近穩態。</td>
+                </tr>
+            </table>
+
+            <table>
+                <caption>電容 / 電感 充電與放電特性</caption>
+                <tr>
+                    <th>元件</th>
+                    <th>充電 (上升/下降)</th>
+                    <th>放電 (上升/下降)</th>
+                </tr>
+                <tr>
+                    <td>電容 電壓</td>
+                    <td>上升</td>
+                    <td>下降</td>
+                </tr>
+                <tr>
+                    <td>電容 電流</td>
+                    <td>下降</td>
+                    <td>下降</td>
+                </tr>
+                <tr>
+                    <td>電感 電壓</td>
+                    <td>下降</td>
+                    <td>下降</td>
+                </tr>
+                <tr>
+                    <td>電感 電流</td>
+                    <td>上升</td>
+                    <td>下降</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 選擇題區域 -->
+        <div id="quiz"></div>
+    </div>
 
     <script>
+        // 初始化曲線圖
         const ctx = document.getElementById('transientChart').getContext('2d');
         const transientChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: [], // 時間軸標籤動態生成
+                labels: [],
                 datasets: [{
                     label: '暫態響應',
                     borderColor: 'blue',
@@ -55,14 +169,15 @@
                         title: {
                             display: true,
                             text: '時間 (秒)'
-                        },
-                        min: 0,
-                        max: 5 // 初始化為 5，將根據 tau 更新
+                        }
                     },
                     y: {
                         title: {
                             display: true,
                             text: '電壓 / 電流'
+                        },
+                        ticks: {
+                            callback: function() { return ''; }
                         }
                     }
                 }
@@ -70,26 +185,36 @@
         });
 
         function updateGraph() {
+            const chargeState = document.getElementById('chargeStateSelect').value;
             const componentType = document.getElementById('componentSelect').value;
             const displayType = document.getElementById('displaySelect').value;
             const tau = parseFloat(document.getElementById('tauRange').value);
             document.getElementById('tauValue').textContent = tau;
-
-            // 根據 tau 調整時間軸範圍
             const maxTime = 5 * tau;
             transientChart.options.scales.x.max = maxTime;
 
-            // 更新時間軸標籤及數據
-            const labels = Array.from({ length: 50 }, (_, i) => i * (maxTime / 50)); // 分50個點顯示
+            const labels = Array.from({ length: 50 }, (_, i) => i * (maxTime / 50));
             const data = labels.map(t => {
                 if (componentType === 'capacitor') {
-                    return displayType === 'voltage'
-                        ? E * (1 - Math.exp(-t / tau)) // 電容充電電壓
-                        : (E / R) * Math.exp(-t / tau); // 電容充電電流
+                    if (chargeState === 'charge') {
+                        return displayType === 'voltage'
+                            ? E * (1 - Math.exp(-t / tau))
+                            : (E / R) * Math.exp(-t / tau);
+                    } else {
+                        return displayType === 'voltage'
+                            ? E * Math.exp(-t / tau)
+                            : (E / R) * Math.exp(-t / tau);
+                    }
                 } else {
-                    return displayType === 'voltage'
-                        ? E * Math.exp(-t / tau) // 電感放電電壓
-                        : (E / R) * (1 - Math.exp(-t / tau)); // 電感放電電流
+                    if (chargeState === 'charge') {
+                        return displayType === 'voltage'
+                            ? E * Math.exp(-t / tau)
+                            : (E / R) * (1 - Math.exp(-t / tau));
+                    } else {
+                        return displayType === 'voltage'
+                            ? E * Math.exp(-t / tau)
+                            : (E / R) * (1 - Math.exp(-t / tau));
+                    }
                 }
             });
 
@@ -97,32 +222,66 @@
             transientChart.data.datasets[0].data = data;
             transientChart.update();
 
-            // 更新方程式顯示
-            updateEquationDisplay(componentType, displayType, tau);
+            // 更新公式顯示
+            document.getElementById("formulaDisplay").innerHTML = 
+                `當前公式：${
+                    displayType === 'voltage' ? 'V(t)' : 'I(t)'
+                } = ${componentType === 'capacitor' ? 'E' : 'E / R'} ${
+                    chargeState === 'charge' 
+                    ? '(1 - e<sup>-t / ' + tau + '</sup>)' 
+                    : 'e<sup>-t / ' + tau + '</sup>'
+                } <br> 該 ${componentType === 'capacitor' ? '電容' : '電感'} 元件將在約 ${5 * tau} 秒後完成 ${chargeState === 'charge' ? '充電' : '放電'}`;
         }
 
-        function updateEquationDisplay(componentType, displayType, tau) {
-            let equation = '';
-            if (componentType === 'capacitor') {
-                if (displayType === 'voltage') {
-                    equation = `V(t) = E (1 - e<sup>-t / ${tau}</sup>)`;
-                } else {
-                    equation = `I(t) = (E / R) e<sup>-t / ${tau}</sup>`;
-                }
+        function startQuiz() {
+            document.getElementById("academicTables").classList.add("hidden");
+            document.getElementById("showTablesButton").classList.remove("hidden");
+            document.getElementById("quiz").style.display = "block";
+            document.getElementById("quiz").innerHTML = "";
+
+            const selectedQuestions = quizData.sort(() => 0.5 - Math.random()).slice(0, 4);
+            selectedQuestions.forEach((q, index) => {
+                const questionDiv = document.createElement("div");
+                questionDiv.className = "question";
+                questionDiv.innerHTML = `<p>${index + 1}. ${q.question}</p>`;
+                
+                ["上升", "下降"].forEach(option => {
+                    const button = document.createElement("button");
+                    button.textContent = option;
+                    button.onclick = () => toggleAnswer(button, option, q.correct);
+                    questionDiv.appendChild(button);
+                });
+
+                document.getElementById("quiz").appendChild(questionDiv);
+            });
+        }
+
+        function showTables() {
+            document.getElementById("academicTables").classList.remove("hidden");
+            document.getElementById("showTablesButton").classList.add("hidden");
+        }
+
+        function toggleAnswer(button, selectedAnswer, correctAnswer) {
+            if (button.style.backgroundColor === "green" || button.style.backgroundColor === "red") {
+                button.style.backgroundColor = "";
             } else {
-                if (displayType === 'voltage') {
-                    equation = `V(t) = E e<sup>-t / ${tau}</sup>`;
-                } else {
-                    equation = `I(t) = (E / R) (1 - e<sup>-t / ${tau}</sup>)`;
-                }
+                button.style.backgroundColor = selectedAnswer === correctAnswer ? "green" : "red";
             }
-            document.getElementById('equationDisplay').innerHTML = `當前方程式: ${equation}`;
         }
 
-        // 初始化常數 E 和 R 值
-        const E = 1; // 可以設定為 1，或改為使用者輸入
-        const R = 1; // 可以設定為 1，或改為使用者輸入
+        const quizData = [
+            { question: "電容的電壓在充電過程中是？", correct: "上升" },
+            { question: "電感的電流在放電過程中是？", correct: "下降" },
+            { question: "電容的電流在充電過程中是？", correct: "下降" },
+            { question: "電感的電壓在充電過程中是？", correct: "下降" },
+            { question: "電感的電流在充電過程中是？", correct: "上升" },
+            { question: "電容的電壓在放電過程中是？", correct: "下降" },
+            { question: "電容的電流在放電過程中是？", correct: "下降" },
+            { question: "電感的電壓在放電過程中是？", correct: "下降" },
+        ];
 
+        const E = 1;
+        const R = 1;
         updateGraph();
     </script>
 </body>
