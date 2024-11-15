@@ -284,5 +284,133 @@
         const R = 1;
         updateGraph();
     </script>
+
+
+
+
+
+<!-- 自然常數計算機區 -->
+<div id="naturalConstantCalculator">
+    <h2>自然常數計算機</h2>
+    <p>選擇公式，並輸入 Rth、C/L、Vth 和 t 值來計算結果。</p>
+
+    <label for="formulaSelect">選擇公式：</label>
+    <select id="formulaSelect">
+        <option value="chargeCapacitorVoltage">電容充電電壓：V(t) = Vth * (1 - e^(-t / (Rth * C)))</option>
+        <option value="dischargeCapacitorVoltage">電容放電電壓：V(t) = Vth * e^(-t / (Rth * C))</option>
+        <option value="chargeCapacitorCurrent">電容充電電流：I(t) = (Vth / Rth) * e^(-t / (Rth * C))</option>
+        <option value="dischargeCapacitorCurrent">電容放電電流：I(t) = (Vth / Rth) * e^(-t / (Rth * C))</option>
+        <option value="chargeInductorVoltage">電感充電電壓：V(t) = Vth * e^(-t / (L / Rth))</option>
+        <option value="dischargeInductorVoltage">電感放電電壓：V(t) = Vth * e^(-t / (L / Rth))</option>
+        <option value="chargeInductorCurrent">電感充電電流：I(t) = (Vth / Rth) * (1 - e^(-t / (L / Rth)))</option>
+        <option value="dischargeInductorCurrent">電感放電電流：I(t) = (Vth / Rth) * e^(-t / (L / Rth))</option>
+    </select>
+
+    <label for="RthValue">Rth (電阻, Ω)：</label>
+    <input type="number" id="RthValue" step="any" placeholder="輸入 Rth 值">
+
+    <label for="CLvalue">C / L (電容或電感, F 或 H)：</label>
+    <input type="number" id="CLvalue" step="any" placeholder="輸入電容或電感值">
+
+    <label for="VthValue">Vth (電壓, V)：</label>
+    <input type="number" id="VthValue" step="any" placeholder="輸入 Vth 值">
+
+    <label for="timeValue">t (時間, 秒)：</label>
+    <input type="number" id="timeValue" step="any" placeholder="輸入時間值">
+
+    <button onclick="calculateResult()">計算</button>
+
+    <p id="resultDisplay">計算結果：<span id="calculationResult"></span></p>
+</div>
+
+<script>
+function calculateResult() {
+    const formulaType = document.getElementById("formulaSelect").value;
+    const Rth = parseFloat(document.getElementById("RthValue").value);
+    const CL = parseFloat(document.getElementById("CLvalue").value);
+    const Vth = parseFloat(document.getElementById("VthValue").value);
+    const t = parseFloat(document.getElementById("timeValue").value);
+
+    // Calculate equivalent current (Ith) from Vth and Rth if needed
+    const Ith = Vth / Rth;
+
+    // Validate that inputs are numbers
+    if (isNaN(Rth) || isNaN(CL) || isNaN(Vth) || isNaN(t)) {
+        document.getElementById("calculationResult").textContent = "請輸入有效的數值";
+        return;
+    }
+
+    let result;
+    if (formulaType === "chargeCapacitorVoltage") {
+        result = Vth * (1 - Math.exp(-t / (Rth * CL)));  // Charging capacitor voltage: ascending
+    } else if (formulaType === "dischargeCapacitorVoltage") {
+        result = Vth * Math.exp(-t / (Rth * CL));         // Discharging capacitor voltage: descending
+    } else if (formulaType === "chargeCapacitorCurrent") {
+        result = Ith * Math.exp(-t / (Rth * CL));         // Charging capacitor current: descending
+    } else if (formulaType === "dischargeCapacitorCurrent") {
+        result = Ith * Math.exp(-t / (Rth * CL));         // Discharging capacitor current: descending
+    } else if (formulaType === "chargeInductorVoltage") {
+        result = Vth * Math.exp(-t / (CL / Rth));         // Charging inductor voltage: descending
+    } else if (formulaType === "dischargeInductorVoltage") {
+        result = Vth * Math.exp(-t / (CL / Rth));         // Discharging inductor voltage: descending
+    } else if (formulaType === "chargeInductorCurrent") {
+        result = Ith * (1 - Math.exp(-t / (CL / Rth)));   // Charging inductor current: ascending
+    } else if (formulaType === "dischargeInductorCurrent") {
+        result = Ith * Math.exp(-t / (CL / Rth));         // Discharging inductor current: descending
+    }
+
+    document.getElementById("calculationResult").textContent = result ? result.toFixed(4) : "計算出錯，請檢查輸入值";
+}
+</script>
+
+<!-- 自然常數簡易計算機區 - 改良美觀版本 -->
+<div id="exponentialCalculator" style="max-width: 600px; margin: 20px auto; font-family: Arial, sans-serif; border: 1px solid #ccc; border-radius: 10px; padding: 20px; box-shadow: 0px 4px 8px rgba(0,0,0,0.1);">
+    <h2 style="text-align: center; color: #333;">自然常數簡易計算機</h2>
+    <p style="text-align: center; color: #666;">使用下方滑桿或輸入框調整指數值，結果會即時顯示：</p>
+
+    <!-- Slider Control and Input Field -->
+    <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px;">
+        <label for="exponentSlider" style="color: #333;">指數數值 (0 ~ 1)：</label>
+        <input type="range" id="exponentSlider" min="0" max="1" step="0.01" value="0" oninput="syncSliderToInput()" style="flex: 1; cursor: pointer; height: 8px; background-color: #ddd; border-radius: 4px;">
+        <input type="number" id="exponentInput" min="0" max="1" step="0.01" value="0" oninput="syncInputToSlider()" style="width: 60px; padding: 5px; font-size: 16px; text-align: center; border: 1px solid #ccc; border-radius: 5px;">
+    </div>
+
+    <!-- Display Real-Time Calculations with Enhanced Styling -->
+    <div style="margin: 10px 0; color: #444;">
+        <p style="font-size: 18px;">上升曲線： (1 - e<sup id="riseExponentDisplay" style="color: #007ACC;">-0</sup>) = <span id="riseResult" style="border:1px solid #007ACC; padding:4px; color: #007ACC; font-weight: bold; border-radius: 4px;">--</span></p>
+        <p style="font-size: 18px;">下降曲線： e<sup id="fallExponentDisplay" style="color: #FF6600;">-0</sup> = <span id="fallResult" style="border:1px solid #FF6600; padding:4px; color: #FF6600; font-weight: bold; border-radius: 4px;">--</span></p>
+    </div>
+</div>
+
+<script>
+// Function to sync slider movement to input and calculate result
+function syncSliderToInput() {
+    const exponent = parseFloat(document.getElementById('exponentSlider').value);
+    document.getElementById('exponentInput').value = exponent.toFixed(2);  // Sync input with slider
+    calculateAndDisplayResults(exponent);
+}
+
+// Function to sync manual input to slider and calculate result
+function syncInputToSlider() {
+    const exponent = parseFloat(document.getElementById('exponentInput').value);
+    document.getElementById('exponentSlider').value = exponent.toFixed(2);  // Sync slider with input
+    calculateAndDisplayResults(exponent);
+}
+
+// Function to calculate and display both rise and fall results
+function calculateAndDisplayResults(exponent) {
+    // Update exponent displays in the formulas
+    document.getElementById('riseExponentDisplay').textContent = `-${exponent.toFixed(2)}`;
+    document.getElementById('fallExponentDisplay').textContent = `-${exponent.toFixed(2)}`;
+
+    // Calculate results
+    const riseResult = 1 - Math.exp(-exponent);
+    const fallResult = Math.exp(-exponent);
+
+    // Display results in styled boxes
+    document.getElementById('riseResult').textContent = riseResult.toFixed(6);
+    document.getElementById('fallResult').textContent = fallResult.toFixed(6);
+}
+</script>
 </body>
 </html>
