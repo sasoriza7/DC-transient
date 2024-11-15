@@ -213,7 +213,7 @@
                     } else {
                         return displayType === 'voltage'
                             ? E * Math.exp(-t / tau)
-                            : (E / R) * (1 - Math.exp(-t / tau));
+                            : (E / R) * Math.exp(-t / tau);
                     }
                 }
             });
