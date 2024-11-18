@@ -193,44 +193,64 @@
             const maxTime = 5 * tau;
             transientChart.options.scales.x.max = maxTime;
 
-            const labels = Array.from({ length: 50 }, (_, i) => i * (maxTime / 50));
-            const data = labels.map(t => {
-                if (componentType === 'capacitor') {
-                    if (chargeState === 'charge') {
-                        return displayType === 'voltage'
-                            ? E * (1 - Math.exp(-t / tau))
-                            : (E / R) * Math.exp(-t / tau);
-                    } else {
-                        return displayType === 'voltage'
-                            ? E * Math.exp(-t / tau)
-                            : (E / R) * Math.exp(-t / tau);
-                    }
-                } else {
-                    if (chargeState === 'charge') {
-                        return displayType === 'voltage'
-                            ? E * Math.exp(-t / tau)
-                            : (E / R) * (1 - Math.exp(-t / tau));
-                    } else {
-                        return displayType === 'voltage'
-                            ? E * Math.exp(-t / tau)
-                            : (E / R) * Math.exp(-t / tau);
-                    }
-                }
-            });
+const labels = Array.from({ length: 50 }, (_, i) => i * (maxTime / 50));
+const data = labels.map(t => {
+    if (componentType === 'capacitor') {
+    if (chargeState === 'charge') {
+        return displayType === 'voltage'
+            ? E * (1 - Math.exp(-t / tau))  // 電壓：上升曲線
+            : (E / R) * Math.exp(-t / tau); // 電流：下降曲線
+    } else {
+        return displayType === 'voltage'
+            ? E * Math.exp(-t / tau)  // 電壓：下降曲線
+            : (E / R) * Math.exp(-t / tau); // 電流：下降曲線
+    }
+} else {
+    if (chargeState === 'charge') {
+        return displayType === 'voltage'
+            ? E * Math.exp(-t / tau)  // 電壓：下降曲線
+            : (E / R) * (1 - Math.exp(-t / tau)); // 電流：上升曲線
+    } else {
+        return displayType === 'voltage'
+            ? E * Math.exp(-t / tau)  // 電壓：下降曲線
+            : (E / R) * Math.exp(-t / tau); // 電流：下降曲線
+    }
+}
+});
+
+
 
             transientChart.data.labels = labels;
             transientChart.data.datasets[0].data = data;
             transientChart.update();
 
             // 更新公式顯示
-            document.getElementById("formulaDisplay").innerHTML = 
-                `當前公式：${
-                    displayType === 'voltage' ? 'V(t)' : 'I(t)'
-                } = ${componentType === 'capacitor' ? 'E' : 'E / R'} ${
-                    chargeState === 'charge' 
-                    ? '(1 - e<sup>-t / ' + tau + '</sup>)' 
-                    : 'e<sup>-t / ' + tau + '</sup>'
-                } <br> 該 ${componentType === 'capacitor' ? '電容' : '電感'} 元件將在約 ${5 * tau} 秒後完成 ${chargeState === 'charge' ? '充電' : '放電'}`;
+document.getElementById("formulaDisplay").innerHTML = 
+    `當前公式：${
+        displayType === 'voltage' ? 'V(t)' : 'I(t)'
+    } = ${
+        componentType === 'capacitor' 
+            ? (displayType === 'voltage' && chargeState === 'charge'
+                ? 'E (1 - e<sup>-t / ' + tau + '</sup>)'  // 電容充電電壓上升曲線
+                : displayType === 'voltage' && chargeState === 'discharge'
+                    ? 'E e<sup>-t / ' + tau + '</sup>'     // 電容放電電壓下降曲線
+                    : displayType === 'current' && chargeState === 'charge'
+                        ? '(E / R) e<sup>-t / ' + tau + '</sup>'  // 電容充電電流下降曲線
+                        : '(E / R) e<sup>-t / ' + tau + '</sup>'  // 電容放電電流下降曲線
+              )
+            : (chargeState === 'charge' && displayType === 'voltage') 
+                ? 'E e<sup>-t / ' + tau + '</sup>'   // 電感充電電壓下降曲線
+                : (chargeState === 'charge' && displayType === 'current') 
+                    ? '(E / R) (1 - e<sup>-t / ' + tau + '</sup>)'  // 電感充電電流上升曲線
+                    : '(E / R) e<sup>-t / ' + tau + '</sup>'  // 電感放電電流下降曲線
+    } <br> 該 ${componentType === 'capacitor' ? '電容' : '電感'} 元件將在約 ${5 * tau} 秒後完成 ${chargeState === 'charge' ? '充電' : '放電'}`;
+
+
+
+
+
+
+
         }
 
         function startQuiz() {
